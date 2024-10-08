@@ -10,6 +10,7 @@ docker run \
   -v ./run_inference.sh:/home/kbkim/run_inference.sh \
   -v ./base_inference.py:/home/kbkim/base_inference.py \
   -v ./outputs:/home/kbkim/outputs \
+  -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN \
   llama_cpp:pytorch-24.02
 
 # --cap-add=SYS_ADMIN: for ncu
