@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MODEL_PATH="./outputs/checkpoints_42dot_LLM-PLM-1.3B-42dot-PLM-F16.gguf"
-DATA_PATH="./llama.cpp/test.bin"
+DATA_PATH="./mmlu.bin"
 CONTEXT_SIZE=1024
 
 ./llama.cpp/llama-perplexity \
