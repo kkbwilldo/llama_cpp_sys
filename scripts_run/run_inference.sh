@@ -6,5 +6,5 @@ NUM_NEW_TOKENS=128
 
 ./llama.cpp/llama-cli \
   -m $MODEL_PATH \
-  -p $PROMPT \
+  -p "$PROMPT" \
   -n $NUM_NEW_TOKENS
