@@ -17,6 +17,10 @@ docker run \
   -v $PROJECT_ROOT/scripts_run/run_locust.sh:/home/kbkim/run_locust.sh \
   -v $PROJECT_ROOT/scripts_run/run_checkpoint_to_gguf_conversion.sh:/home/kbkim/run_checkpoint_to_gguf_conversion.sh \
   -v $PROJECT_ROOT/scripts_run/run_inference.sh:/home/kbkim/run_llama_cli.sh \
+  -v $PROJECT_ROOT/scripts_download/to_bin.cpp:/home/kbkim/to_bin.cpp \
+  -v $PROJECT_ROOT/scripts_download/json.hpp:/home/kbkim/json.hpp \
+  -v $PROJECT_ROOT/scripts_download/download_dataset.py:/home/kbkim/download_dataset.py \
+  -v $PROJECT_ROOT/scripts_download/download_mmlu_dataset_and_convert_to_bin.sh:/home/kbkim/download_mmlu_dataset_and_convert_to_bin.sh \
   -v $PROJECT_ROOT/locustfile.py:/home/kbkim/locustfile.py \
   -v $PROJECT_ROOT/outputs:/home/kbkim/outputs \
   -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN \
