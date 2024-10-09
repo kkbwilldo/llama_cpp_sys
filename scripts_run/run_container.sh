@@ -16,6 +16,7 @@ docker run \
   -v $PROJECT_ROOT/scripts_run/run_llama_cpp_server.sh:/home/kbkim/run_llama_cpp_server.sh \
   -v $PROJECT_ROOT/scripts_run/run_locust.sh:/home/kbkim/run_locust.sh \
   -v $PROJECT_ROOT/scripts_run/run_checkpoint_to_gguf_conversion.sh:/home/kbkim/run_checkpoint_to_gguf_conversion.sh \
+  -v $PROJECT_ROOT/scripts_run/run_inference.sh:/home/kbkim/run_llama_cli.sh \
   -v $PROJECT_ROOT/locustfile.py:/home/kbkim/locustfile.py \
   -v $PROJECT_ROOT/outputs:/home/kbkim/outputs \
   -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN \
