@@ -25,4 +25,4 @@ RUN git clone https://github.com/kkbwilldo/llama.cpp.git && \
   make GGML_CUDA=1
 
 # 필요한 라이브러리를 설치합니다.
-RUN pip install sentencepiece transformers safetensors locust
+RUN pip install sentencepiece transformers safetensors locust datasets
