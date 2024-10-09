@@ -11,11 +11,11 @@ docker run \
   --name llama_cpp \
   --cap-add=SYS_ADMIN \
   -v $PROJECT_ROOT/checkpoints_42dot_LLM-PLM-1.3B:/home/kbkim/checkpoints_42dot_LLM-PLM-1.3B:ro \
-  -v $PROJECT_ROOT/scripts/run_download_mmlu_dataset.sh:/home/kbkim/run_download_mmlu_dataset.sh \
-  -v $PROJECT_ROOT/scripts/run_mmlu_bench.sh:/home/kbkim/run_mmlu_bench.sh \
-  -v $PROJECT_ROOT/scripts/run_llama_cpp_server.sh:/home/kbkim/run_llama_cpp_server.sh \
-  -v $PROJECT_ROOT/scripts/run_locust.sh:/home/kbkim/run_locust.sh \
-  -v $PROJECT_ROOT/scripts/run_checkpoint_to_gguf_conversion.sh:/home/kbkim/run_checkpoint_to_gguf_conversion.sh \
+  -v $PROJECT_ROOT/scripts_run/run_download_mmlu_dataset.sh:/home/kbkim/run_download_mmlu_dataset.sh \
+  -v $PROJECT_ROOT/scripts_run/run_mmlu_bench.sh:/home/kbkim/run_mmlu_bench.sh \
+  -v $PROJECT_ROOT/scripts_run/run_llama_cpp_server.sh:/home/kbkim/run_llama_cpp_server.sh \
+  -v $PROJECT_ROOT/scripts_run/run_locust.sh:/home/kbkim/run_locust.sh \
+  -v $PROJECT_ROOT/scripts_run/run_checkpoint_to_gguf_conversion.sh:/home/kbkim/run_checkpoint_to_gguf_conversion.sh \
   -v $PROJECT_ROOT/locustfile.py:/home/kbkim/locustfile.py \
   -v $PROJECT_ROOT/outputs:/home/kbkim/outputs \
   -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN \
