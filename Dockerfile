@@ -15,8 +15,8 @@ COPY vimrc /root/.vimrc
 # 패키지 목록을 업데이트하고 업그레이드합니다.
 RUN apt update && apt upgrade -y
 
-# sudo, git, tmux를 설치합니다.
-RUN apt-get update && apt-get install -y sudo git tmux
+# sudo, git, tmux, gdb를 설치합니다.
+RUN apt-get update && apt-get install -y sudo git tmux gdb
 
 # llama.cpp를 클론합니다. 빌드 이슈로 인해 빌드는 컨테이너에서 진행합니다.
 RUN git clone https://github.com/kkbwilldo/llama.cpp.git
