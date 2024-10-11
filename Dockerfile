@@ -18,11 +18,11 @@ RUN apt update && apt upgrade -y
 # sudo, git, tmux를 설치합니다.
 RUN apt-get update && apt-get install -y sudo git tmux
 
-# llama.cpp를 설치합니다.
-RUN git clone https://github.com/kkbwilldo/llama.cpp.git && \
-  cd llama.cpp && \
-  git checkout kbkim_b3661 && \
-  make GGML_CUDA=1
+# llama.cpp를 클론합니다. 빌드 이슈로 인해 빌드는 컨테이너에서 진행합니다.
+RUN git clone https://github.com/kkbwilldo/llama.cpp.git
+WORKDIR /home/kbkim/llama.cpp
+RUN git checkout kbkim_b3661
+WORKDIR /home/kbkim/
 
 # 필요한 라이브러리를 설치합니다.
 RUN pip install sentencepiece transformers safetensors locust datasets
