@@ -1,4 +1,4 @@
-from locust import HttpUser, TaskSet, task
+from locust import HttpUser, TaskSet, task, constant
 
 class LlamaCPPTest(TaskSet):
     """
@@ -22,5 +22,6 @@ class LlamaUser(HttpUser):
     """
     llama.cpp 서버에 요청을 보내는 사용자 클래스
     """
-    tasks = [LlamaTest]
+    tasks = [LlamaCPPTest]
     host = "http://localhost:8080"  # llama-server 주소
+    wait_time = constant(10) # 사용자 간 요청 간격
