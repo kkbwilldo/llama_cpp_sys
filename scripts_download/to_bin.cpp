@@ -120,6 +120,6 @@ int main(int argc, char **argv) {
     }
 
     encode(argv[1], argv[2]);
-    printf("Transformation complete. Data saved to 'mmlu.bin'\n");
+    printf("Transformation complete. Data saved to %s\n", argv[2]);
     return 0;
 }
