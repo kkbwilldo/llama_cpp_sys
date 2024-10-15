@@ -10,6 +10,8 @@
 
 - 프로젝트는 도커 이미지를 위한 `Dockerfile`과 컨테이너에서 실행할 스크립트들로 구성됩니다.
 - 해당 도커 이미지는 `NGC`를 기반으로하며 llama.cpp를 [`fork`한 레포지토리](https://github.com/kkbwilldo/llama.cpp/tree/kbkim_b3661)를 클론한 후 `GGML_CUDA=1` 플래그와 함께 빌드를 수행합니다.
+        ![forked llama.cpp](./images/forked_llama_cpp.png)
+
 - fork한 llama.cpp는 b3661 Release를 기반으로 하며 42dot_LLM-PLM-1.3B를 gguf로 변환할 수 있도록 일부 코드를 수정하였습니다.
 
 ```shell
@@ -51,7 +53,7 @@
 ### 1. 모델 다운로드
 
 - 프로젝트의 기초가 되는 [42dot_LLM-PLM-1.3B](https://huggingface.co/42dot/42dot_LLM-PLM-1.3B) 모델을 다운로드합니다.
-- `scripts_download 디렉토리`에서 다음 스크립트를 실행하여 모델을 다운로드합니다.
+- `scripts_download` 디렉토리에서 다음 스크립트를 실행하여 모델을 다운로드합니다.
 
 ```bash
 scripts_download $ python download_model.py
