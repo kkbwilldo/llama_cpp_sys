@@ -1,11 +1,20 @@
+import json
+import argparse
 from datasets import load_dataset
 
-# Load the MMLU dataset
-dataset = load_dataset("cais/mmlu", "all")
 
 # Function to transform each question into the desired format
 def transform_entry(entry):
-    # Check if the answer is an integer and use it directly as the correct index
+    """
+    각 태스크를 llama.cpp가 요구하는 형식으로 변환합니다.
+
+    Args:
+        entry (dict): 태스크의 정보가 담긴 딕셔너리
+
+    Returns:
+        dict: llama.cpp가 요구하는 형식으로 변환된 태스크
+    """
+    # 정답을 인덱스로 변환
     correct_index = entry["answer"] if isinstance(entry["answer"], int) else ord(entry["answer"]) - ord('A')
     
     return {
@@ -17,12 +26,36 @@ def transform_entry(entry):
         }
     }
 
-# Apply transformation to all entries
-transformed_data = [transform_entry(entry) for entry in dataset['test']]
 
-# Save transformed data to a JSON file
-import json
-with open('mmlu.json', 'w') as f:
-    json.dump(transformed_data, f, indent=2)
+def parsing():
 
-print("Transformation complete. Data saved to 'mmlu.json'")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-id", type=str, default="cais/mmlu", help="Repo. name")
+    parser.add_argument("--output-path", type=str, default="mmlu.json", help="Output path")
+
+    args = parser.parse_args()
+
+    return args
+
+
+def main(args):
+    """
+    데이터셋을 llama.cpp가 요구하는 형식으로 변환한 후 JSON 파일로 저장합니다.
+    """
+
+    # dataset 로드
+    dataset = load_dataset(args.repo_id, "all")
+
+    # 데이터셋을 정제
+    transformed_data = [transform_entry(entry) for entry in dataset['test']]
+
+    # 데이터를 json 파일로 저장
+    with open(args.output_path, 'w') as f:
+        json.dump(transformed_data, f, indent=2)
+
+    print(f"Transformation complete. Data saved to '{args.output_path}'")
+
+
+if __name__ == "__main__":
+    args = parsing()
+    main(args)
