@@ -21,6 +21,7 @@ docker run \
   -v $PROJECT_ROOT/scripts_run/run_mmlu_bench.sh:/home/kbkim/run_mmlu_bench.sh \
   -v $PROJECT_ROOT/scripts_run/run_llama_cpp_server.sh:/home/kbkim/run_llama_cpp_server.sh \
   -v $PROJECT_ROOT/scripts_run/run_locust.sh:/home/kbkim/run_locust.sh \
+  -v $PROJECT_ROOT/scripts_run/run_build_test.sh:/home/kbkim/run_build_test.sh \
   -v $PROJECT_ROOT/scripts_download/to_bin.cpp:/home/kbkim/to_bin.cpp \
   -v $PROJECT_ROOT/scripts_download/json.hpp:/home/kbkim/json.hpp \
   -v $PROJECT_ROOT/scripts_download/download_dataset.py:/home/kbkim/download_dataset.py \
