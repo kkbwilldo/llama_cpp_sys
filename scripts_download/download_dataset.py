@@ -16,15 +16,18 @@ def transform_entry(entry):
     """
     # 정답을 인덱스로 변환
     correct_index = entry["answer"] if isinstance(entry["answer"], int) else ord(entry["answer"]) - ord('A')
-    
+
+    question = f"Question: {entry['question']} Answer:"
+    answers = [choice + " " + str(i) for i,choice in enumerate(entry["choices"],start=1)]
+
     return {
         "multiple_correct": {"answers": [], "labels": []},
-        "question": entry["question"],
+        "question": question,
         "single_correct": {
-            "answers": entry["choices"],
+            "answers": answers,
             "labels": [1 if i == correct_index else 0 for i in range(len(entry["choices"]))]
         }
-    }
+    }    
 
 
 def parsing():
@@ -48,7 +51,6 @@ def main(args):
 
     # 데이터셋을 정제
     transformed_data = [transform_entry(entry) for entry in dataset['test']]
-
     # 데이터를 json 파일로 저장
     with open(args.output_path, 'w') as f:
         json.dump(transformed_data, f, indent=2)
