@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MODEL_DIR="../checkpoints_42dot_LLM-PLM-1.3B"
-OUTPUT_DIR="../outputs"
+OUTPUT_DIR="../outputs/base_fp16.gguf"
 CONVERSION_TYPE="f16"
 
 cd llama.cpp
