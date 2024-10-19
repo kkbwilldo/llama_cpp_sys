@@ -4,14 +4,23 @@ class LlamaCPPTest(TaskSet):
     """
     llama.cpp 서버에 요청을 보내는 테스트 클래스
     """
+    def on_start(self):
+        """
+        TaskSet이 시작될 때 실행되는 함수
+        harry_potter.txt 파일을 읽어 lines 리스트에 저장
+        """
+        with open("./outputs/harry_potter.txt", "r") as file:
+            self.prompt = file.read().strip()
+
+
     @task
     def llama_request(self):
         """
         llama.cpp 서버에 요청을 보내는 함수
         """
-        # llama-server로 보낼 요청 데이터 예시
+        # llama-server로 보낼 요청 데이터
         payload = {
-            "prompt": "Building a website can be done in 10 simple steps:",
+            "prompt": self.prompt,
             "n_predict": 768
         }
 
@@ -24,4 +33,4 @@ class LlamaUser(HttpUser):
     """
     tasks = [LlamaCPPTest]
     host = "http://localhost:8080"  # llama-server 주소
-    wait_time = constant(10) # 사용자 간 요청 간격
+    wait_time = constant(20) # 사용자 간 요청 간격
