@@ -27,6 +27,7 @@ docker run \
   -v $PROJECT_ROOT/scripts_download/download_dataset.py:/home/kbkim/download_dataset.py \
   -v $PROJECT_ROOT/scripts_download/run_download_mmlu_dataset_and_convert_to_bin.sh:/home/kbkim/run_download_mmlu_dataset_and_convert_to_bin.sh \
   -v $PROJECT_ROOT/locustfile.py:/home/kbkim/locustfile.py \
+  -v $PROJECT_ROOT/client.py:/home/kbkim/client.py \
   -v $PROJECT_ROOT/outputs:/home/kbkim/outputs \
   -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN \
   llama_cpp:pytorch-24.02
