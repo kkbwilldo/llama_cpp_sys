@@ -11,6 +11,7 @@
 - [llama.cpp analysis](https://docs.google.com/spreadsheets/d/1_qTqZYky0isMz-rS67lxWdlnov_ceIlJlq4XBeSB6xU/edit?pli=1&gid=0#gid=0)는 구글 스프레드시트입니다.
 - 해당 스프레드시트는 llama.cpp의 `b3661 Release`를 기반으로 하는 42dot_LLM-PLM-1.3B 모델의 inference를 수행하는 데 필요한 요소들을 정리한 것입니다.
 - 빌드 flags에 따른 성능 변화, 양자화 오차를 줄이기 위한 방법, 추론 서빙 성능을 높이는 방법들을 `커널 분석 등의 다양한 방법으로 실험`하여 정리했습니다.
+    ![analysis](./images/analysis.png)
 - [구글 드라이브](https://drive.google.com/drive/folders/1uzB_wB5ZDVcSHv-_fT7wh8Noop2iyCOq?usp=sharing)에 FP16 모델의 가중치와 양자화된 모델의 가중치 등 프로젝트의 생성물들을 업로드해두었습니다.
 
 ## 프로젝트 결과
