@@ -43,8 +43,7 @@ else
     mkdir -p "$LOG_DIR"
 fi
 
-# 테스트 데이터 다운로드
-# wget https://huggingface.co/datasets/ikawrakow/validation-datasets-for-llama.cpp/resolve/main/mmlu-test.bin -O mmlu.bin
+# 테스트 데이터 다운로드 후 정제
 ./run_download_mmlu_dataset_and_convert_to_bin.sh
 
 # 빌드 옵션 조합에 따라 빌드 및 테스트 실행
