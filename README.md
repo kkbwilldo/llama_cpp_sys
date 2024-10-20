@@ -4,48 +4,66 @@
 
 - [42dot_LLM-PLM-1.3B](https://huggingface.co/42dot/42dot_LLM-PLM-1.3B) 모델을 llama.cpp의 [b3661 Release](https://github.com/ggerganov/llama.cpp/tree/b3661)를 이용하여 inference를 수행합니다.
 - 기본 FP16 모델과 INT4 quantized 모델 간의 [MMLU benchmark](https://huggingface.co/datasets/cais/mmlu)를 수행하며, 이 때 INT4 Quantized 모델의 품질 하락을 최소화 하도록 합니다.
-- Input sequence는 2560, output sequence는 768로 설정한 request를 처리하는 데 FP16 모델과 quantized된 모델 간의 처리 속도를 측정합니다. 이 때 1개, 2개, 4개, 8개의 동시 requests가 발생할 때의 처리 속도를 측정합니다.
+- `Input sequence는 2560, output sequence는 768로 설정한 request`를 처리하는 데 FP16 모델과 quantized된 모델 간의 처리 속도를 측정합니다. 이 때 1개, 2개, 4개, 8개의 동시 requests가 발생할 때의 처리 속도를 측정합니다.
+
+## 프로젝트 분석
+
+- [llama.cpp analysis](https://docs.google.com/spreadsheets/d/1_qTqZYky0isMz-rS67lxWdlnov_ceIlJlq4XBeSB6xU/edit?pli=1&gid=0#gid=0)는 구글 스프레드시트입니다.
+- 해당 스프레드시트는 llama.cpp의 `b3661 Release`를 기반으로 하는 42dot_LLM-PLM-1.3B 모델의 inference를 수행하는 데 필요한 요소들을 정리한 것입니다.
+- 빌드 flags에 따른 성능 변화, 양자화 오차를 줄이기 위한 방법, 추론 서빙 성능을 높이는 방법들을 `커널 분석 등의 다양한 방법으로 실험`하여 정리했습니다.
+- [구글 드라이브](https://drive.google.com/drive/folders/1uzB_wB5ZDVcSHv-_fT7wh8Noop2iyCOq?usp=sharing)에 FP16 모델의 가중치와 양자화된 모델의 가중치 등 프로젝트의 생성물들을 업로드해두었습니다.
+
+## 프로젝트 결과
+
+1. 사용한 llama.cpp 빌드 옵션
+
+    ```bash
+    $ make -j 32 GGML_CUDA=1 GGML_FA_ALL_QUANTS=1
+    ```
+
+    - [llama.cpp 빌드 스크립트](https://github.com/kkbwilldo/llama.cpp/blob/kbkim_b3661/kbkim_build_script.sh)
+
+----
+
+2. INT4 양자화에 사용한 양자화 포맷
+
+    ```text
+    Q4_K_S
+    ```
+
+----
+
+3. FP16 모델과 양자화 모델 간 MMLU 성능 비교
+
+    |  | FP16  | Q4_K_S  |
+    |---------|---------|---------|
+    | MMLU  | 30.9215 | 30.9215 |
+
+    - [빌드 옵션 및 양자화 방법에 따른 MMLU 성능 측정 코드](https://github.com/kkbwilldo/llama_cpp_sys/blob/main/scripts_run/run_build_test.sh)
+
+----
+
+4. Input Sequence 2560, Output Sequence 768에 해당하는 request를 처리하는 속도 비교
+
+    | num requests | FP16  | Q4_K_S  |
+    |---------|---------|---------|
+    | 1  | 4.8154 sec | 2.8404 sec |
+    | 2  | 7.0466 sec | 4.2436 sec |
+    | 4  | 9.4264 sec | 7.0648 sec |
+    | 8  | 15.0397 sec | 13.837 sec |
+
+    - [서버 실행 코드](https://github.com/kkbwilldo/llama_cpp_sys/blob/main/scripts_run/run_llama_cpp_server.sh)
+    - [클라이언트 실행 코드](https://github.com/kkbwilldo/llama_cpp_sys/blob/main/client.py)
+
 
 ## 프로젝트 구성
 
 - 프로젝트는 도커 이미지를 위한 `Dockerfile`과 컨테이너에서 실행할 스크립트들로 구성됩니다.
-- 해당 도커 이미지는 `NGC`를 기반으로하며 llama.cpp를 [`fork`한 레포지토리](https://github.com/kkbwilldo/llama.cpp/tree/kbkim_b3661)를 클론한 후 `GGML_CUDA=1` 플래그와 함께 빌드를 수행합니다.
+- 해당 도커 이미지는 `NGC`를 기반으로하며 llama.cpp를 [`fork`한 레포지토리](https://github.com/kkbwilldo/llama.cpp/tree/kbkim_b3661)를 클론합니다.
         ![forked llama.cpp](./images/forked_llama_cpp.png)
 
 - fork한 llama.cpp는 b3661 Release를 기반으로 하며 42dot_LLM-PLM-1.3B를 gguf로 변환할 수 있도록 일부 코드를 수정하였습니다.
 
-```shell
-.
-├── checkpoints_42dot_LLM-PLM-1.3B <---- 스크립트 실행으로 생성될 내용
-│   ├── added_tokens.json
-│   ├── asset
-│   ├── config.json
-│   ├── generation_config.json
-│   ├── merges.txt
-│   ├── model.safetensors
-│   ├── pytorch_model.bin
-│   ├── README.md
-│   ├── special_tokens_map.json
-│   ├── tokenizer_config.json
-│   ├── tokenizer.json
-│   └── vocab.json
-├── Dockerfile
-├── locustfile.py
-├── outputs                        <---- 스크립트 실행으로 생성될 내용
-│   └── checkpoints_42dot_LLM-PLM-1.3B-42dot-PLM-F16.gguf
-├── scripts_download
-│   └── download_model.py
-├── scripts_run
-│   ├── build_docker.sh
-│   ├── run_checkpoint_to_gguf_conversion.sh
-│   ├── run_container.sh
-│   ├── run_download_mmlu_dataset.sh
-│   ├── run_inference.sh
-│   ├── run_llama_cpp_server.sh
-│   ├── run_locust.sh
-│   └── run_mmlu_bench.sh
-└── vimrc
-```
 
 
 ## 프로젝트 실행
@@ -65,44 +83,44 @@ scripts_download $ python download_model.py
 
 - llama.cpp가 설치된 이미지를 빌드합니다.
 
-```Dockerfile
-# Dockerfile
+    ```Dockerfile
+    # Dockerfile
 
-# NVIDIA PyTorch container를 베이스 이미지로 사용합니다.
-FROM nvcr.io/nvidia/pytorch:24.02-py3
+    # NVIDIA PyTorch container를 베이스 이미지로 사용합니다.
+    FROM nvcr.io/nvidia/pytorch:24.02-py3
 
-# root 및 kbkim 패스워드 설정                                                                                 
-RUN useradd -m kbkim && echo 'kbkim:kbkim' | chpasswd && adduser kbkim sudo
-RUN echo 'root:kbkim' | chpasswd
+    # root 및 kbkim 패스워드 설정
+    RUN useradd -m kbkim && echo 'kbkim:kbkim' | chpasswd && adduser kbkim sudo
+    RUN echo 'root:kbkim' | chpasswd
 
-# 워킹 디렉토리를 설정합니다.
-WORKDIR /home/kbkim
+    # 워킹 디렉토리를 설정합니다.
+    WORKDIR /home/kbkim
 
-# vimrc를 복사하여 세팅합니다.
-COPY vimrc ./.vimrc
-COPY vimrc /root/.vimrc
+    # vimrc를 복사하여 세팅합니다.
+    COPY vimrc ./.vimrc
+    COPY vimrc /root/.vimrc
 
-# 패키지 목록을 업데이트하고 업그레이드합니다.
-RUN apt update && apt upgrade -y
+    # 패키지 목록을 업데이트하고 업그레이드합니다.
+    RUN apt update && apt upgrade -y
 
-# sudo, git, tmux를 설치합니다.
-RUN apt-get update && apt-get install -y sudo git tmux
+    # sudo, git, tmux, gdb를 설치합니다.
+    RUN apt-get update && apt-get install -y sudo git tmux gdb
 
-# llama.cpp를 클론합니다. 빌드 이슈로 인해 빌드는 컨테이너에서 진행합니다.
-RUN git clone https://github.com/kkbwilldo/llama.cpp.git
-WORKDIR /home/kbkim/llama.cpp
-RUN git checkout kbkim_b3661
-WORKDIR /home/kbkim/
+    # llama.cpp를 클론합니다. 빌드 이슈로 인해 빌드는 컨테이너에서 진행합니다.
+    RUN git clone https://github.com/kkbwilldo/llama.cpp.git
+    WORKDIR /home/kbkim/llama.cpp
+    RUN git checkout kbkim_b3661
+    WORKDIR /home/kbkim/
 
-# 필요한 라이브러리를 설치합니다.
-RUN pip install sentencepiece transformers safetensors locust datasets
-```
+    # 필요한 라이브러리를 설치합니다.
+    RUN pip install sentencepiece transformers safetensors locust datasets
+    ```
 
 - 이 이미지는 NGC를 기반으로 레이어가 구성됩니다.
 - user와 root 설정 및 vim 그리고 기타 개발에 필요한 패키지를 추가합니다.
 - `scripts_run 디렉토리`에 존재하는 `build_docker.sh` 스크립트를 실행하여 도커 이미지를 빌드합니다.
 - 이 빌드는 `--no-cache` 플래그를 사용하여 캐시된 레이어를 사용하지 않도록 합니다. 이는 fork된 레포지토리의 업데이트를 매번 반영할 수 있도록 조치한 것입니다.
-- llama.cpp 빌드 이슈로 인해 llama.cpp의 빌드는 컨테이너 안에서 수행합니다.
+- 수 많은 llama.cpp 빌드 테스트를 해야하기 때문에 `llama.cpp의 빌드는 컨테이너 안에서 따로 수행`합니다.
 
 ```bash
 scripts_run $ ./build_docker.sh
@@ -305,11 +323,14 @@ Transformation complete. Data saved to 'mmlu.bin'
 
 ```bash
 {
-    "multiple_correct": {"answers": [],"labels": []},
-    "question": "When was the telescope invented by Galileo?",
-    "single_correct": {
-        "answers": ["1409","1509","1609","1709"],
-        "labels": [0,0,1,0]
+    "multiple_correct":{
+        "answers":[],
+        "labels":[]
+    },
+    "question":"Question: Find the degree for the given field extension Q(sqrt(2), sqrt(3), sqrt(18)) over Q. Answer:",
+    "single_correct":{
+        "answers":["0 1","4 2","2 3","6 4"],
+        "labels":[0,1,0,0]
     }
 },
 ```
@@ -333,20 +354,20 @@ llama_model_loader: - kv   4:                           general.basename str    
 
 ...
 
-14038   31.47171962
-14039   31.46947788
-14040   31.47435897
-14041   31.47211737
-14042   31.46987609
+14039	30.92100577
+14040	30.92592593
+14041	30.92372338
+14042	30.92152115
 
- Final result: 31.4699 +/- 0.3919
+llama_print_timings:        load time =     221.33 ms
+llama_print_timings:      sample time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
+llama_print_timings: prompt eval time =  618333.11 ms / 1414745 tokens (    0.44 ms per token,  2288.00 tokens per second)
+llama_print_timings:        eval time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
+llama_print_timings:       total time =  650173.59 ms / 1414746 tokens
+
+ Final result: 30.9215 +/- 0.3900
 Random chance: 25.0000 +/- 0.3654
 
-llama_print_timings:        load time =     287.40 ms
-llama_print_timings:      sample time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
-llama_print_timings: prompt eval time = 1053890.60 ms / 1343069 tokens (    0.78 ms per token,  1274.39 tokens per second)
-llama_print_timings:        eval time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
-llama_print_timings:       total time = 1085524.68 ms / 1343070 tokens
 ```
 
 - 해당 스크립트를 통해 각 모델의 MMLU 성능을 측정합니다.
@@ -474,9 +495,7 @@ INFO [            update_slots] all slots are idle | tid="128290850131968" times
 ### 9. 모델 양자화 후 MMLU 벤치마크
 
 - `FP16 gguf 모델`을 `INT4으로 가중치를 양자화`한 후 MMLU 벤치마크를 수행하여 양자화 에러 정도를 측정합니다.
-- 양자화 종류는 ~~~입니다.
-- 각 양자화는 다음과 같습니다.
-    - 
+- 양자화 종류와 분석에 대한 내용은 [구글 스프레드시트](https://docs.google.com/spreadsheets/d/1_qTqZYky0isMz-rS67lxWdlnov_ceIlJlq4XBeSB6xU/edit?pli=1&gid=0#gid=0)를 참고해주세요.
 - 양자화를 수행하기 위해 컨테이너 안에서 `run_model_quantization.sh` 스크립트를 실행합니다.
 
     ```bash
@@ -543,15 +562,145 @@ INFO [            update_slots] all slots are idle | tid="128290850131968" times
 
     ...
 
-    14041   31.61455737
-    14042   31.61230594
+    14039	30.92100577
+    14040	30.92592593
+    14041	30.92372338
+    14042	30.92152115
 
-    llama_print_timings:        load time =     235.54 ms
+    llama_print_timings:        load time =     221.33 ms
     llama_print_timings:      sample time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
-    llama_print_timings: prompt eval time =  531292.38 ms / 1343069 tokens (    0.40 ms per token,  2527.93 tokens per second)
+    llama_print_timings: prompt eval time =  618333.11 ms / 1414745 tokens (    0.44 ms per token,  2288.00 tokens per second)
     llama_print_timings:        eval time =       0.00 ms /     1 runs   (    0.00 ms per token,      inf tokens per second)
-    llama_print_timings:       total time =  562839.73 ms / 1343070 tokens
+    llama_print_timings:       total time =  650173.59 ms / 1414746 tokens
 
-    Final result: 31.6123 +/- 0.3924
+    Final result: 30.9215 +/- 0.3900
     Random chance: 25.0000 +/- 0.3654
+    ```
+
+- 다양한 빌드 옵션과 함께 다양한 양자화 그리고 MMLU 성능 측정까지 자동화한 [코드](https://github.com/kkbwilldo/llama_cpp_sys/blob/main/scripts_run/run_build_test.sh)를 사용할 수 있습니다.
+
+    ```bash
+    root@desktop:/home/kbkim# ./run_build_test.sh
+    ```
+
+### 10. llama.cpp 디버깅
+
+- llama.cpp는 C++ 코드로 구성되어있어 GDB를 활용해 디버깅할 수 있습니다.
+- 디버깅을 하기 위해서 디버깅 모드로 빌드를 먼저 수행합니다.
+
+```bash
+root@desktop:/home/kbkim/llama.cpp# make -j 32 LLAMA_DEBUG=1
+```
+
+- llama-perplexity 실행 파일을 디버깅하는 방법은 다음과 같습니다.
+
+1. gdb 명령어로 llama-perplexity를 실행합니다.
+
+    ```bash
+    root@desktop:/home/kbkim/llama.cpp# gdb ./llama-perplexity
+
+    GNU gdb (Ubuntu 12.1-0ubuntu1~22.04.2) 12.1                    
+    Copyright (C) 2022 Free Software Foundation, Inc.              
+    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>            
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.
+    Type "show copying" and "show warranty" for details.
+    This GDB was configured as "x86_64-linux-gnu".
+    Type "show configuration" for configuration details.
+    For bug reporting instructions, please see:
+    <https://www.gnu.org/software/gdb/bugs/>.
+    Find the GDB manual and other documentation resources online at:
+        <http://www.gnu.org/software/gdb/documentation/>.
+    For help, type "help".
+    Type "apropos word" to search for commands related to "word"...
+    Reading symbols from ./llama-perplexity...
+    (gdb)
+    ```
+
+2. 원하는 위치에 breakpoint를 설정합니다.
+
+    ```bash
+    break multiple_choice_score
+    Breakpoint 1 at 0x59d2f542b05e: file examples/perplexity/perplexity.cpp, line 1406.
+    ```
+
+3. 실행에 필요한 flags와 함께 해당 프로그램을 실행합니다.
+
+    ```bash
+    (gdb) run --multiple-choice -m ../outputs/ggml-model-Q4_0.gguf -bf ../mmlu.bin
+    Starting program: /home/kbkim/llama.cpp/llama-perplexity --multiple-choice -m ../outputs/ggml-model-Q4_0.gguf -bf ../mmlu.bin
+    warning: Error disabling address space randomization: Operation not permitted
+    [Thread debugging using libthread_db enabled]
+    Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+    Read 6892126 bytes from binary file ../mmlu.bin
+    main: build = 3665 (d72d3fa3)
+    main: built with cc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0 for x86_64-linux-gnu
+    main: seed  = 1728635781
+    llama_model_loader: loaded meta data with 30 key-value pairs and 219 tensors from ../outputs/ggml-model-Q4_0.gguf (version GGUF V3 (latest))
+    llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+    llama_model_loader: - kv   0:                       general.architecture str              = llama
+    llama_model_loader: - kv   1:                               general.type str              = model
+    llama_model_loader: - kv   2:                               general.name str              = 42dot PLM 1.3B
+    llama_model_loader: - kv   3:                           general.finetune str              = 42dot-PLM
+    llama_model_loader: - kv   4:                           general.basename str              = checkpoints_42dot_LLM-PLM
+
+    ...
+
+
+    llama_new_context_with_model:        CPU compute buffer size =   102.25 MiB
+    llama_new_context_with_model: graph nodes  = 774
+    llama_new_context_with_model: graph splits = 1
+    [New Thread 0x7da493a00640 (LWP 15093)]
+    [New Thread 0x7da493000640 (LWP 15094)]
+    [New Thread 0x7da492600640 (LWP 15095)]
+    [New Thread 0x7da491c00640 (LWP 15096)]
+    [New Thread 0x7da491200640 (LWP 15097)]
+    [New Thread 0x7da490800640 (LWP 15098)]
+    [New Thread 0x7da48fe00640 (LWP 15099)]
+
+    system_info: n_threads = 8 (n_threads_batch = 8) / 24 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | BLAS = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | LLAMAFILE = 1 |
+
+    Thread 1 "llama-perplexit" hit Breakpoint 1, multiple_choice_score (ctx=0x5957e23a9890, params=...) at examples/perplexity/perplexity.cpp:1406
+    1406    static void multiple_choice_score(llama_context * ctx, const gpt_params & params) {
+    (gdb)  
+    ```
+
+4. 확인할 값들을 출력하며 디버깅합니다.
+
+    ```bash
+    Thread 1 "llama-perplexit" hit Breakpoint 1, multiple_choice_score (ctx=0x62ee4f2b5860, params=...) at examples/perplexity/perplexity.cpp:1624
+    1624                auto & cur_task = tasks[i];
+    (gdb) p tasks[i]
+    $5 = {question = "Statement 1| Every group of order p^2 where p is prime is Abelian. Statement 2 | For a fixed prime p a Sylow p-subgroup of a group G is a normal subgroup of G if and only if it is the only Sylow p-sub"...,
+    mc1 = {
+        answers = std::vector of length 4, capacity 4 = {"True, True", "False, False", "True, False", "False, True"}, 
+        labels = std::vector of length 4, capacity 4 = {1, 0, 0, 0}
+    }, 
+    mc2 = {
+        answers = std::vector of length 0, capacity 0, 
+        labels = std::vector of length 0, capacity 0
+    }, 
+    i_logits = 0, 
+    common_prefix = 63, 
+    required_tokens = 75, 
+    seq_tokens = std::vector of length 4, capacity 4 = {
+        std::vector of length 66, capacity 224 = {33923, 220, 16, 91, 5040, 2003, 288, 1529, 278, 61, 17, 993, 
+            278, 317, 6606, 317, 4112, 36616, 13, 24432, 220, 17, 220, 91, 1364, 257, 6218, 6606, 278, 257, 2672, 
+            765, 278, 12, 4457, 7510, 288, 257, 2003, 460, 317, 257, 4222, 30967, 288, 460, 650, 289, 879, 650, 
+            356, 317, 263, 879, 2672, 765, 278, 12, 4457, 7510, 288, 460, 13(), 13180, 11, 13180}, 
+        std::vector of length 66, capacity 226 = {33923, 220, 16, 91, 5040, 2003, 288, 1529, 278, 61, 17, 993, 
+            278, 317, 6606, 317, 4112, 36616, 13, 24432, 220, 17, 220, 91, 1364, 257, 6218, 6606, 278, 257, 2672, 
+            765, 278, 12, 4457, 7510, 288, 257, 2003, 460, 317, 257, 4222, 30967, 288, 460, 650, 289, 879, 650, 
+            356, 317, 263, 879, 2672, 765, 278, 12, 4457, 7510, 288, 460, 13(), 21408, 11, 21408}, 
+        std::vector of length 66, capacity 225 = {33923, 220, 16, 91, 5040, 2003, 288, 1529, 278, 61, 17, 993, 
+            278, 317, 6606, 317, 4112, 36616, 13, 24432, 220, 17, 220, 91, 1364, 257, 6218, 6606, 278, 257, 2672, 
+            765, 278, 12, 4457, 7510, 288, 257, 2003, 460, 317, 257, 4222, 30967, 288, 460, 650, 289, 879, 650, 
+            356, 317, 263, 879, 2672, 765, 278, 12, 4457, 7510, 288, 460, 13(), 13180, 11, 21408}, 
+        std::vector of length 66, capacity 225 = {33923, 220, 16, 91, 5040, 2003, 288, 1529, 278, 61, 17, 993, 278, 317, 6606, 317, 4112, 36616, 13,
+        24432, 220, 17, 220, 91, 1364, 257, 6218, 6606, 278, 257, 2672, 765, 278, 12, 4457, 7510, 288, 257, 2003, 460, 317, 257, 4222, 30967, 288, 460, 650, 289, 879, 650, 356, 317, 263, 879, 2672, 765, 278, 12, 4457, 7510,
+        288, 460, 13(), 21408, 11, 13180}
+    }, 
+    log_probs = std::vector of length 0, capacity 0
+    }
+    # 21408: "False", 13180: "True", 11: ","
     ```
